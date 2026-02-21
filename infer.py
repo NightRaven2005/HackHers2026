@@ -2,6 +2,10 @@ import torch
 import torch.nn as nn
 import joblib
 import pandas as pd
+import random
+import glob
+import librosa
+import numpy as np
 
 class MLP(nn.Module):
     def __init__(self, input_size, num_classes):
@@ -42,6 +46,15 @@ def predict_genre(raw_features):
         _, predicted = torch.max(outputs, 1)
     return le.inverse_transform(predicted.numpy())[0]
 
+def predict_prob(raw_features):
+    features = pd.DataFrame([raw_features], columns=scaler.feature_names_in_)
+    features_scaled = scaler.transform(features)
+    with torch.no_grad():
+        inputs = torch.FloatTensor(features_scaled)
+        outputs = model(inputs)
+        probabilities = torch.softmax(outputs/1.5, dim=1).numpy()[0]
+    return {le.inverse_transform([i])[0]: float(prob) for i, prob in enumerate(probabilities)}
+
 if __name__ == "__main__":
     df = pd.read_csv('datasets/Data/features_3_sec_cleaned.csv')
     sample = df.iloc[0]
@@ -56,3 +69,29 @@ if __name__ == "__main__":
 
     print(f"Actual genre:    {actual_label}")
     print(f"Predicted genre: {predicted_label}")
+
+    files = glob.glob('datasets/Data/genres_original/**/*.wav', recursive=True)
+    sampled_files = random.sample(files, 10)
+    print("\nRandom sample predictions:")
+    for file in sampled_files:
+        y_audio, sr = librosa.load(file, duration=3.0)
+        features = {
+            'rms_mean': float(np.mean(librosa.feature.rms(y=y_audio))),
+            'rms_var': float(np.var(librosa.feature.rms(y=y_audio))),
+            'harmony_mean': float(np.mean(librosa.effects.harmonic(y=y_audio))),
+            'harmony_var': float(np.var(librosa.effects.harmonic(y=y_audio))),
+            'perceptr_mean': float(np.mean(librosa.effects.percussive(y=y_audio))),
+            'perceptr_var': float(np.var(librosa.effects.percussive(y=y_audio))),
+            'tempo': float(librosa.beat.tempo(y=y_audio, sr=sr)[0]),
+        }
+        mfccs = librosa.feature.mfcc(y=y_audio, sr=sr, n_mfcc=20)
+        for i in range(1, 21):
+            features[f'mfcc{i}_mean'] = float(np.mean(mfccs[i-1]))
+            features[f'mfcc{i}_var'] = float(np.var(mfccs[i-1]))
+        raw = list(features.values())
+        predicted_genre = predict_genre(raw)
+        probs = predict_prob(raw)
+        actual_genre = file.split('\\')[-2]
+        print(f"  {actual_genre:10s} -> {predicted_genre}")
+        for genre, prob in sorted(probs.items(), key=lambda x: x[1], reverse=True):
+            print(f"    {genre:12s}: {prob:.1%}")

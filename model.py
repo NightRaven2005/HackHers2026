@@ -83,5 +83,5 @@ print("Validation Accuracy:", accuracy_score(y_val, all_preds))
 print("Classification Report:\n", classification_report(y_val, all_preds))
 print("Confusion Matrix:\n", confusion_matrix(y_val, all_preds))
 
-torch.save(model.state_dict(), 'model_3sec.pth')
+torch.save(model.state_dict(), 'model_3sec.pth', _use_new_zipfile_serialization=False)
 print("Model saved to model_3sec.pth")
