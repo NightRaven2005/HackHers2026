@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import joblib
 from sklearn.preprocessing import StandardScaler, LabelEncoder
 
 #Read Datasets
@@ -29,4 +30,7 @@ df2_cleaned[feature_cols] = scaler.transform(df2_cleaned[feature_cols])
 
 df1_cleaned.to_csv('datasets/Data/features_30_sec_cleaned.csv', index=False)
 df2_cleaned.to_csv('datasets/Data/features_3_sec_cleaned.csv', index=False)
+
+joblib.dump(scaler, 'scaler.pkl')
+joblib.dump(le, 'label_encoder.pkl')
 print("Preprocessing complete. Cleaned files saved.")
