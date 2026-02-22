@@ -16,7 +16,6 @@ Unlike typical generative demos, GenreBlender combines:
 Deployed on Hugging Face Spaces:
 
 👉 http://localhost:8501/  
-*(Replace with your actual Hugging Face Spaces URL when sharing publicly.)*
 
 ---
 
