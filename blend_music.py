@@ -54,4 +54,4 @@ def generate_from_blend(genreA: str, genreB: str, alpha: float, out_dir: str) ->
 
 
 # TEST
-generate_from_blend("classical", "hip hop", 0.7, "output")
+generate_from_blend("classical", "hip hop", 0.7, "music_output")
